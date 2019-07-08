@@ -9,12 +9,21 @@ from deap import base, creator, tools, algorithms
 
 
 
-def extract_languages(string):
-    if not isinstance(string, str):
-        return []
-    string = re.split('\W+', string)
-    string = [s for s in string if s != '']
-    return string
+def extract_languages(langs, levels):
+
+    lang_dicts = {'N':['A','I','B'],'A':['I','B'],'Beginner':['B'],'Intermediate':['I'],'Advanced':['A']}
+        
+    langs_ordered = []
+    
+    if len(langs)!=len(levels):
+        levels = [levels[0]]*len(langs)
+        
+    levels = [l if l in lang_dicts.keys() else 'Intermediate' for l in levels]
+        
+    for i in range(len(langs)):
+        langs_ordered+=[langs[i]+level for level in lang_dicts[levels[i]]]
+        
+    return langs_ordered
 
 
 def create_solution(sheet, max_people=None):
@@ -28,8 +37,20 @@ def create_solution(sheet, max_people=None):
     id_number = 0
 
     for i, row in sheet.iterrows():
-        langs_prac = extract_languages(row[4]) + extract_languages(row[5])
-        langs_teach = extract_languages(row[6])
+        if type(row[4])==str:
+            langs_prac = extract_languages([x.strip() for x in row[4].split(',')],['N']) 
+        if type(row[5])==str:
+            langs_prac += extract_languages([x.strip() for x in row[5].split(',')],['A'])
+        if type(row[7])==str:
+            levels = [x.strip() for x in row[7].split(',')]
+        else:
+            levels=['Intermediate']
+        if type(row[7])==str:
+            langs_teach = [x.strip() for x in row[6].split(',')]
+            langs_teach = extract_languages(langs_teach,levels)
+
+        if not len(langs_prac) or not len(langs_teach):
+            continue
 
         for l_p in langs_prac:
             if l_p in langs_teach:
@@ -58,13 +79,13 @@ def create_solution(sheet, max_people=None):
     return people, languages, table
 
 def load_sheet(name):
-    sheet = pd.read_excel(name, header=2)
+    sheet = pd.read_excel(name, header=1)
     return sheet
 
 
 
 
-name = "data/sheet.xlsx"
+name = "data/sheet_ordered.xlsx"
 [people, languages, table] = create_solution(load_sheet(name), max_people=None)
 
 people_num = {}
@@ -197,13 +218,14 @@ def draw(solution):
 def print_solution(solution):
 
     solution= solution.copy()
-
+    #ppl = people.keys()
+    
     while 1:
         print("cleaning")
         lonelies = ((solution.sum(0)>0).sum(1) == 1).sum(1)>0
 
         if any(lonelies):
-
+            #ppl = [k if not lonelies[k] for k in ppl]
             solution[:,lonelies,:,:]=0
             solution[solution.sum(-1).sum(-1).sum(-1)==1,:,:,:]=0
 
@@ -224,7 +246,7 @@ def print_solution(solution):
     #                            solution[:, :, 0, 1] + solution[:, :, 1, 1] * 2], axis=1))
 
 
-NGEN = 1000
+NGEN = 5000
 MU = 2000
 LAMBDA = 100
 CXPB = 0.7
