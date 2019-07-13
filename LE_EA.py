@@ -30,7 +30,7 @@ def create_solution(sheet, max_people=None):
 
     people = {}
     languages = set()
-
+    name_dict = {}
     #tables = []
 
     pool = []
@@ -59,7 +59,8 @@ def create_solution(sheet, max_people=None):
         if all([langs_teach, langs_prac]):
 
             people[id_number] = [langs_teach, langs_prac]
-
+            name_dict[id_number] = [row[2],row[3]]
+            
             [languages.add(lang) for lang in langs_teach+langs_prac]
             id_number += 1
 
@@ -76,7 +77,7 @@ def create_solution(sheet, max_people=None):
         for l_learn in people[p][1]:
             table[p,languages.index(l_learn),1]=1
 
-    return people, languages, table
+    return people, languages, table, name_dict
 
 def load_sheet(name):
     sheet = pd.read_excel(name, header=1)
@@ -86,8 +87,8 @@ def load_sheet(name):
 
 
 name = "data/sheet_ordered.xlsx"
-[people, languages, table] = create_solution(load_sheet(name), max_people=None)
-
+[people, languages, table, names] = create_solution(load_sheet(name), max_people=None)
+print(names)
 people_num = {}
 for k in people.keys():
     people_num[k] = [[languages.index(lang) for lang in people[k][time]] for time in [0,1]]
@@ -195,8 +196,10 @@ def draw(solution):
     for p in range(solution.shape[0]):
 
         if solution[p].sum():
-
-            G.add_node(p)
+#            print(names[p])
+            name = ' '.join([str(i) for i in names[p]])
+            
+            G.add_node(name)
             node_colors.append("g")
 
             if solution[p].sum():
@@ -205,9 +208,9 @@ def draw(solution):
 
                 for i in [0,1] :
                     if prac[i] :
-                        G.add_edge(p,"_".join([languages[langs[i]], str(time[i])]))
+                        G.add_edge(name,"_".join([languages[langs[i]], str(time[i])]))
                     else:
-                        G.add_edge("_".join([languages[langs[i]], str(time[i])]),p)
+                        G.add_edge("_".join([languages[langs[i]], str(time[i])]),name)
 
                     edge_colors.append('k')#'['k', 'grey'][i])
 
@@ -238,22 +241,80 @@ def print_solution(solution):
                 pupils = ','.join([str(p) for p in np.where(solution[:,lang,0,time])])
                 line = languages[lang]+'_'+str(time)+':'+'|'.join([teachers,pupils])
 
-                print(line)
+#                print(line)
 
     draw(solution)
 
-    # plt.imshow(np.concatenate([solution[:, :, 0, 0] + solution[:, :, 1, 0] * 2,
-    #                            solution[:, :, 0, 1] + solution[:, :, 1, 1] * 2], axis=1))
 
+def save_solution(solution):
+    
+    solution= solution.copy()
+    
+    while 1:
+        print("cleaning")
+        lonelies = ((solution.sum(0)>0).sum(1) == 1).sum(1)>0
+
+        if any(lonelies):
+            #ppl = [k if not lonelies[k] for k in ppl]
+            solution[:,lonelies,:,:]=0
+            solution[solution.sum(-1).sum(-1).sum(-1)==1,:,:,:]=0
+
+        else:
+            break
+        
+    file = open('output.txt','w')
+        
+    for var_time in [0, 1]:
+        for lang in range(solution.shape[1]):
+            if solution[:,lang,:,var_time].sum():
+                
+                file.write(languages[lang]+', period '+str(var_time)+':\n')
+                
+                teachers = ((np.where(solution[:,lang,1,var_time])[0].squeeze()))
+                pupils = ((np.where(solution[:,lang,0,var_time])[0].squeeze()))
+                
+                if len(teachers.shape):
+                    names_t = ([' '.join([str(t) for t in names[int(t)]]) for t in teachers])
+
+                else:
+                    names_t=([' '.join(names[int(teachers)])])  
+                    
+                if len(pupils.shape):
+                    names_p=([' '.join([str(t) for t in names[int(t)]]) for t in pupils])
+
+                else:
+                    names_p=([' '.join(names[int(pupils)])])
+                    
+                file.write('-teaching:\n')
+                [file.write(t+'\n') for t in names_t]
+                file.write('-practicing:\n')
+                [file.write(p+'\n') for p in names_p]
+                file.write('\n')
+
+                
+    file.close()
+                 
+    columns=['first_name','last_name','lang_prac','time_prac','lang_teach','time_teach']
+    output = pd.DataFrame(columns=columns)
+
+    for person in range(solution.shape[0]):
+        if solution[person].sum():
+            lang_t, time_t = np.where(solution[person,:,1,:])
+            lang_p, time_p = np.where(solution[person,:,0,:])
+            new_row = [str(names[person][0]),str(names[person][1]),languages[lang_p[0]],time_p[0],languages[lang_t[0]],time_t[0]]
+            new_row = pd.DataFrame({columns[i]:new_row[i] for i in range(len(columns))},index=[person])
+            output = output.append(new_row)
+    
+    output.to_csv('output.xlsx')    
 
 NGEN = 5000
 MU = 2000
-LAMBDA = 100
-CXPB = 0.7
-MUTPB = 0.2
+LAMBDA = 2000
+CXPB = 0.2
+MUTPB = 0.8
 
 pop = toolbox.population(n=MU)
-hof = tools.HallOfFame(10, similar=np.array_equal)
+hof = tools.HallOfFame(1, similar=np.array_equal)
 stats = tools.Statistics(lambda ind: ind.fitness.values)
 stats.register("avg", np.mean, axis=0)
 stats.register("std", np.std, axis=0)
@@ -268,4 +329,6 @@ solution = hof[0]
 for solution in hof[::-1]:
     print_solution((solution))
     plt.pause(1)
+    
+save_solution(solution)
 

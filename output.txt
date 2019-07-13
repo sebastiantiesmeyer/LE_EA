@@ -1,0 +1,158 @@
+FrenchB, period 0:
+-teaching:
+S S
+-practicing:
+O O
+
+FrenchI, period 0:
+-teaching:
+RA RA
+-practicing:
+C C
+U U
+
+DutchI, period 0:
+-teaching:
+J J
+T T
+DA DA
+nan nan
+-practicing:
+F F
+H H
+M M
+JA JA
+
+SpanishB, period 0:
+-teaching:
+FA FA
+-practicing:
+LA LA
+SA SA
+
+SpanishI, period 0:
+-teaching:
+OA OA
+-practicing:
+E E
+Z Z
+
+GermanB, period 0:
+-teaching:
+BA BA
+IA IA
+-practicing:
+PA PA
+QA QA
+
+EnglishI, period 0:
+-teaching:
+K K
+P P
+Q Q
+-practicing:
+V V
+
+GermanA, period 0:
+-teaching:
+Y Y
+-practicing:
+B B
+
+ArabicB, period 0:
+-teaching:
+I I
+L L
+-practicing:
+N N
+
+DutchB, period 0:
+-teaching:
+W W
+AA AA
+-practicing:
+CA CA
+
+SpanishA, period 0:
+-teaching:
+KA KA
+-practicing:
+R R
+
+FrenchI, period 1:
+-teaching:
+H H
+-practicing:
+J J
+AA AA
+IA IA
+
+DutchA, period 1:
+-teaching:
+U U
+-practicing:
+DA DA
+
+GermanI, period 1:
+-teaching:
+SA SA
+-practicing:
+S S
+
+DutchI, period 1:
+-teaching:
+B B
+C C
+Z Z
+LA LA
+QA QA
+-practicing:
+K K
+L L
+P P
+Q Q
+
+SpanishB, period 1:
+-teaching:
+R R
+-practicing:
+Y Y
+BA BA
+
+SpanishI, period 1:
+-teaching:
+V V
+-practicing:
+T T
+W W
+nan nan
+
+EnglishI, period 1:
+-teaching:
+F F
+M M
+CA CA
+-practicing:
+OA OA
+
+EnglishA, period 1:
+-teaching:
+PA PA
+-practicing:
+FA FA
+
+ItalianB, period 1:
+-teaching:
+JA JA
+-practicing:
+RA RA
+
+DutchB, period 1:
+-teaching:
+E E
+N N
+O O
+-practicing:
+I I
+KA KA
+
